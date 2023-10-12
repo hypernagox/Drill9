@@ -11,7 +11,7 @@ def handle_events():
             running = False
         elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
             running = False
-        elif event.type == SDL_KEYDOWN or event.type == SDL_KEYUP:
+        else:
             Boy.event = event
 
 def reset_world():

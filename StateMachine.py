@@ -1,6 +1,7 @@
 from pico2d import get_time
 from sdl2 import SDL_KEYDOWN, SDLK_a, SDLK_LEFT, SDLK_RIGHT, SDL_KEYUP
 from boy import Boy
+from math import pi
 
 WIDTH,HEIGHT = 800,600
 
@@ -23,12 +24,17 @@ class State:
 class Idle(State):
     def __init__(self,state_machine):
         super().__init__(state_machine)
+        self.startTime = get_time()
+        self.to_sleep = False
     def enter_state(self):
         self.frame = 0
+        self.startTime = get_time()
+        self.to_sleep = False
     def exit_state(self):
         pass
     def update(self):
-        pass
+        if get_time() - self.startTime >= 5:
+            self.to_sleep = True
     def render(self):
         dir = '' if self.state_machine.boy_dir == 1 else 'h'
         boy = self.state_machine.boy
@@ -37,9 +43,34 @@ class Idle(State):
                             boy.sizeX, boy.sizeY)
         self.frame = (self.frame + 1) % 8
     def change_state(self,event):
+        if self.to_sleep:
+            return 'Sleep'
+        if get_time() - self.startTime >= 5:
+            return 'Sleep'
         if event.type == SDL_KEYDOWN:
             if event.key == SDLK_a:
                 return 'AutoRun'
+            if event.key == SDLK_LEFT or event.key == SDLK_RIGHT:
+                return 'Run'
+        return ''
+
+class Sleep(State):
+    def __init__(self,state_machine):
+        super().__init__(state_machine)
+    def enter_state(self):
+        self.frame = 0
+    def exit_state(self):
+        pass
+    def update(self):
+        pass
+    def render(self):
+        dir = 'h' if self.state_machine.boy_dir == 1 else ''
+        boy = self.state_machine.boy
+        self.state_machine.boy_anim.clip_composite_draw(self.frame * 100, 200, 100, 100,
+                                      -pi * self.state_machine.boy_dir / 2, dir, boy.x + 25, boy.y - 25, 100, 100)
+        self.frame = (self.frame + 1) % 8
+    def change_state(self,event):
+        if event.type == SDL_KEYDOWN:
             if event.key == SDLK_LEFT or event.key == SDLK_RIGHT:
                 return 'Run'
         return ''
@@ -118,7 +149,8 @@ class StateMachine:
         self.anim_map = {
             "Idle" : Idle(self),
             "Run" : Run(self),
-            "AutoRun" : AutoRun(self)
+            "AutoRun" : AutoRun(self),
+            "Sleep" : Sleep(self)
         }
     def init(self):
         self.cur_state.enter_state()
