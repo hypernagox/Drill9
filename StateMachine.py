@@ -25,16 +25,14 @@ class Idle(State):
     def __init__(self,state_machine):
         super().__init__(state_machine)
         self.startTime = get_time()
-        self.to_sleep = False
     def enter_state(self):
         self.frame = 0
         self.startTime = get_time()
-        self.to_sleep = False
     def exit_state(self):
         pass
     def update(self):
         if get_time() - self.startTime >= 5:
-            self.to_sleep = True
+            self.state_machine.change_idle_to_sleep()
     def render(self):
         dir = '' if self.state_machine.boy_dir == 1 else 'h'
         boy = self.state_machine.boy
@@ -43,8 +41,6 @@ class Idle(State):
                             boy.sizeX, boy.sizeY)
         self.frame = (self.frame + 1) % 8
     def change_state(self,event):
-        if self.to_sleep:
-            return 'Sleep'
         if get_time() - self.startTime >= 5:
             return 'Sleep'
         if event.type == SDL_KEYDOWN:
@@ -174,3 +170,7 @@ class StateMachine:
             self.cur_state.exit_state()
             self.cur_state = self.anim_map[state]
             self.cur_state .enter_state()
+    def change_idle_to_sleep(self):
+        self.cur_state.exit_state()
+        self.cur_state = self.anim_map['Sleep']
+        self.cur_state.enter_state()
