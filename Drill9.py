@@ -1,24 +1,18 @@
 from pico2d import *
-
-from grass import Grass
+from StateMachine import *
 from boy import Boy
-
-
-# Game object class here
-
+from grass import Grass
 
 def handle_events():
     global running
-
     events = get_events()
     for event in events:
         if event.type == SDL_QUIT:
             running = False
         elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
             running = False
-        else:
-            boy.handle_event(event)
-
+        elif event.type == SDL_KEYDOWN or event.type == SDL_KEYUP:
+            Boy.event = event
 
 def reset_world():
     global running
@@ -34,6 +28,8 @@ def reset_world():
     world.append(grass)
 
     boy = Boy()
+    boy.state_machine = StateMachine(boy)
+    boy.state_machine.init()
     world.append(boy)
 
 
